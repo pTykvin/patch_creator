@@ -1,0 +1,1 @@
+unsigned char hash(unsigned char *str);

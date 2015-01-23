@@ -12,13 +12,13 @@ int command(CMD cmd)
 	char *command;
 	switch(cmd) {
 		case CLONE:
-			command = "git clone git@github.com:pTykvin/ConsumingFormatter.git repo";
+			command = "git clone git@github.com:crystalservice/sco.git repo"; // git@github.com:pTykvin/ConsumingFormatter.git repo";
 		break;
 		case PULL:
 			command = "git pull";
 		break;
 		case DIFF:
-			command = "git diff --raw 81ebdbadf415da1c77094a945095f888fff6f24f master";
+			command = "git diff --raw tag_v52_sco-sprint44 master";
 	}
 
     FILE* file = popen(command, "r");

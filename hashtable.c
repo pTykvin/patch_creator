@@ -1,42 +1,75 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "hashtable.h"
 
-char check;
+typedef struct array {
+	char * project_path;
+	char * jar_path;
+	struct array * next;
+} array;
 
-unsigned char hash(unsigned char *str)
-{
-    unsigned char hash = 81;
-    char c;
-    while (c = *str++)
-        hash = ((hash << sizeof(char)) + hash) + c;
-    return hash;
+char * prepare_path(char **str) {
+	char * pch;
+	pch = strrchr(*str,'\t');
+	*str += pch-*str+1;
+	if (pch = strstr(*str, "/src/"))
+		*pch = '\0';
+	return pch; 
 }
 
-int prepare_path(char *str)
-{
-	char c;
-	int result;
-    while (c = *str++) {
-    	if (c == ' ') {
-    		result = c;
-    	}
-    }
-    return &result;
+void release(array * arr) {
+	array * a = arr;
+	array * next = NULL;
+	for (; a != NULL; a = next) {
+		next = a->next;
+		free(a->project_path);
+		free(a->jar_path);
+		free(a);
+	}
+}
+
+array * put(char * project, char * jar) {
+	array * arr = malloc(sizeof(array));
+	arr->project_path = (project != NULL) ? strdup(project) : NULL;
+	arr->jar_path = (jar != NULL) ? strdup(jar) : NULL;
+	arr->next = NULL;
+	return arr;
+}
+
+void display (array * start) {
+	array * next = start;
+	while (next != NULL) {
+		printf("%s\n", next->project_path);
+		next = next->next;
+	}
 }
 
 int main()
 {
-    FILE* file = fopen("1", "r");
-	char buffer[256], result;
-	unsigned char _hash;
-	while(fgets(buffer, 256, file)) {	
-		result = *(prepare_path(buffer));
-		printf("%i\n", result);
-	}
+	array * parent = NULL;
+	array * next = NULL;
+	array * i = NULL;
 
-	//char msg[32];
-	//while (scanf("%s", msg))
-	//	printf("%u\n", hash(msg));	
-	return 0;
+    FILE * file = fopen("1", "r");
+	char buffer[256];
+	while(fgets(buffer, 256, file)) {	
+		char *c = buffer;
+		if (prepare_path(&c)) {
+			next = put(c, NULL);
+			if (parent == NULL) {
+				parent = next;
+			}
+			if (i != NULL) {
+				if (strcmp(i->project_path, next->project_path) != 0) {
+					i->next = next;
+					i = next;
+				}
+			} else {
+				i = next;
+			}
+		}
+	}
+	display(parent);
+	fclose(file);
 }

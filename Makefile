@@ -1,17 +1,21 @@
-tmp_saver.o:
-	gcc -c tmp_saver.c
-colorcon.o: colorcon.c colorcon.h
-	gcc -c colorcon.c
-global.o: global.c global.h
-	gcc -c global.c
-command.o: command.c command.h tmp_saver.h global.h
-	gcc -c command.c
-list.o: list.c list.h colorcon.h
-	gcc -c list.c
-main.o: main.c command.h colorcon.h list.h global.h
-	gcc -c main.c 
+tmp_saver.o: src/tmp_saver.c src/tmp_saver.h
+	gcc -c src/tmp_saver.c -o opt/tmp_saver.o
+colorcon.o: src/colorcon.c src/colorcon.h
+	gcc -c src/colorcon.c -o opt/colorcon.o
+global.o: src/global.c src/global.h
+	gcc -c src/global.c -o opt/global.o
+command.o: src/command.c src/command.h src/tmp_saver.h src/global.h
+	gcc -c src/command.c -o opt/command.o
+list.o: src/list.c src/list.h src/colorcon.h
+	gcc -c src/list.c -o opt/list.o
+main.o: src/main.c src/command.h src/colorcon.h src/list.h src/global.h
+	gcc -c src/main.c -o opt/main.o 
+
+dir_tree:
+	mkdir opt
+	mkdir bin
 
 list: list.o colorcon.o
-	gcc list.o colorcon.o -o list
+	gcc opt/list.o opt/colorcon.o -o bin/list
 main: main.o command.o colorcon.o tmp_saver.o global.o list.o
-	gcc main.o command.o colorcon.o tmp_saver.o global.o list.o -o main
+	gcc opt/main.o opt/command.o opt/colorcon.o opt/tmp_saver.o opt/global.o opt/list.o -o bin/main

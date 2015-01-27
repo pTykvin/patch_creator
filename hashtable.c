@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "hashtable.h"
+#include "colorcon.h"
 
 typedef struct array {
 	char * project_path;
@@ -45,8 +46,15 @@ void display (array * start) {
 	}
 }
 
-int main()
-{
+int create_build_path(array * project) {
+	printf("%s\n", project->project_path);
+	printf("\t%s", "Jar Name...");
+
+	out_green("OK\n");
+	return 1;
+}
+
+void gen_diff_inf() {
 	array * parent = NULL;
 	array * next = NULL;
 	array * i = NULL;
@@ -55,21 +63,28 @@ int main()
 	char buffer[256];
 	while(fgets(buffer, 256, file)) {	
 		char *c = buffer;
-		if (prepare_path(&c)) {
-			next = put(c, NULL);
-			if (parent == NULL) {
+		if (prepare_path(&c)) {			
+			next = put(c, NULL);				
+			if (parent == NULL)
 				parent = next;
-			}
-			if (i != NULL) {
+			if (i != NULL) {				
 				if (strcmp(i->project_path, next->project_path) != 0) {
-					i->next = next;
-					i = next;
+					if (create_build_path(next) == 1) {
+						i->next = next;
+						i = next;
+					}
 				}
 			} else {
-				i = next;
+				if (create_build_path(next)) {
+					i = next;
+				}
 			}
+				//if (create_build_path(next)) {
+			//		printf("%s\n", "test");
+		//		}
+			
 		}
 	}
-	display(parent);
-	fclose(file);
+	//display(parent);
+	fclose(file);	
 }

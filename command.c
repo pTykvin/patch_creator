@@ -1,10 +1,15 @@
 #include <stdio.h>
+#include <unistd.h>
 #include "command.h"
+#include "tmp_saver.h"
+#include "global.h"
 
 typedef enum {
 	CLONE,
-	PULL,
-	DIFF
+	FETCH,
+	CHECKOUT,
+	CLEAN,
+	BUILD
 } CMD;
 
 int command(CMD cmd) 
@@ -13,33 +18,37 @@ int command(CMD cmd)
 	switch(cmd) {
 		case CLONE:
 			command = "git clone git@github.com:crystalservice/sco.git repo"; // git@github.com:pTykvin/ConsumingFormatter.git repo";
+			tmp_save("repository", "git@github.com:crystalservice/sco.git");
 		break;
-		case PULL:
-			command = "git pull";
+		case FETCH:
+			command = "git fetch";
 		break;
-		case DIFF:
-			command = "git diff --raw tag_v52_sco-sprint44 master";
+		case CLEAN:
+			command = "git clean -f";
+		break;
+		case BUILD:
+			command = "gradle clean build -x test";
+		break;		
+		case CHECKOUT:
+			command = "git checkout tag_v52_sco-sprint44";
+			tmp_save("checkout", "tag_v52_sco-sprint44");
+		break;
+
 	}
 
     FILE* file = popen(command, "r");
-    if (cmd == DIFF) {
-    	char buffer[5][32];
-    	while(fgets(buffer[0], 256, file)) {
-    		printf("%s ", buffer[0]);
-    	}
-    } else {
-    	char buffer[256];
-	    while (fscanf(file, "%255[^\n]", buffer)) {
-			printf("%s\n", buffer);
-	    }
-	}
+	char buffer[256];
+    while (fgets(buffer, 256, file)) {
+		printf("%s", buffer);
+    }
+    printf("[%s READY]\n", command);
     pclose(file);
     return 0;
 }
 
-int pull() {
-	printf("%s\n", "[PULL]");
-	return command(PULL);
+int fetch() {
+	printf("%s\n", "[FETCH]");
+	return command(FETCH);
 }
 
 int clone() {
@@ -47,7 +56,36 @@ int clone() {
 	return command(CLONE);
 }
 
-int diff() {
-	printf("%s\n", "[DIFF]");
-	return command(DIFF);
+int checkout() {
+	printf("%s\n", "[CHECKOUT]");
+	return command(CHECKOUT);
+}
+
+int gradle_build() {
+	printf("%s\n", "[BUILD]");
+	return command(BUILD);
+}
+
+int clean() {
+	printf("%s\n", "[CLEAN]");
+	return command(CLEAN);
+}
+
+FILE * diff() {
+	printf("%s\n", "[DIFF]"); 
+	return popen("git diff --raw tag_v52_sco-sprint43 tag_v52_sco-sprint44", "r");
+}
+
+int git_prepare() {
+	char * repo = "repo";
+	char * git = "repo/.git";
+	if (access(git, F_OK) == -1) {
+		clone();
+	} else {
+		printf("%s\n", "Repository find...");
+	}
+	printf("%s\n", "Change working directory to 'repo'...");
+	chdir(repo);
+	clean();
+	fetch();	
 }

@@ -3,6 +3,7 @@
 #include "command.h"
 #include "tmp_saver.h"
 #include "global.h"
+#include "colorcon.h"
 
 typedef enum {
 	CLONE,
@@ -47,32 +48,32 @@ int command(CMD cmd)
 }
 
 int fetch() {
-	printf("%s\n", "[FETCH]");
+	out_blue("[FETCH]\n");
 	return command(FETCH);
 }
 
 int clone() {
-	printf("%s\n", "[CLONE]");
+	out_blue("[CLONE]\n");
 	return command(CLONE);
 }
 
 int checkout() {
-	printf("%s\n", "[CHECKOUT]");
+	out_blue("[CHECKOUT]\n");
 	return command(CHECKOUT);
 }
 
 int gradle_build() {
-	printf("%s\n", "[BUILD]");
+	out_blue("[BUILD]\n");
 	return command(BUILD);
 }
 
 int clean() {
-	printf("%s\n", "[CLEAN]");
+	out_blue("[CLEAN]\n");
 	return command(CLEAN);
 }
 
 FILE * diff() {
-	printf("%s\n", "[DIFF]"); 
+	out_blue("[DIFF]\n");
 	return popen("git diff --raw tag_v52_sco-sprint43 tag_v52_sco-sprint44", "r");
 }
 

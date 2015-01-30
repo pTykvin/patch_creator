@@ -31,3 +31,7 @@ void out_magenta(char * string) {
 void out_cyan(char * string) {
 	fprintf(stderr, "%s%s%s",ANSI_COLOR_CYAN, string, ANSI_COLOR_RESET);
 }
+
+void out_white(char * string) {
+	fprintf(stderr, "%s", string);
+}

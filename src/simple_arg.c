@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+extern char * deploy;
+
 int main(int argc, char *argv[])
 {
 	char * delivery = "";
@@ -10,11 +12,8 @@ int main(int argc, char *argv[])
 
 	while ((ch = getopt(argc, argv, "d:t")) != EOF)
 		switch (ch) {
-			case 'd':
-				delivery = optarg;
-			break;
-			case 't':
-				thick = 1;
+			case 'deploy':
+				deploy = optarg;
 			break;
 			default:
 				fprintf(stderr, "Неизвестный параметр: '%s'\n", optarg);

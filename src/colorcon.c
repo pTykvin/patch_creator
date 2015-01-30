@@ -9,25 +9,25 @@
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
 void out_red(char * string) {
-	printf("%s%s%s",ANSI_COLOR_RED, string, ANSI_COLOR_RESET);
+	fprintf(stderr, "%s%s%s",ANSI_COLOR_RED, string, ANSI_COLOR_RESET);
 }
 
 void out_green(char * string) {
-	printf("%s%s%s",ANSI_COLOR_GREEN, string, ANSI_COLOR_RESET);
+	fprintf(stderr, "%s%s%s",ANSI_COLOR_GREEN, string, ANSI_COLOR_RESET);
 }
 
 void out_yellow(char * string) {
-	printf("%s%s%s",ANSI_COLOR_YELLOW, string, ANSI_COLOR_RESET);
+	fprintf(stderr, "%s%s%s",ANSI_COLOR_YELLOW, string, ANSI_COLOR_RESET);
 }
 
 void out_blue(char * string) {
-	printf("%s%s%s",ANSI_COLOR_BLUE, string, ANSI_COLOR_RESET);
+	fprintf(stderr, "%s%s%s",ANSI_COLOR_BLUE, string, ANSI_COLOR_RESET);
 }
 
 void out_magenta(char * string) {
-	printf("%s%s%s",ANSI_COLOR_MAGENTA, string, ANSI_COLOR_RESET);
+	fprintf(stderr, "%s%s%s",ANSI_COLOR_MAGENTA, string, ANSI_COLOR_RESET);
 }
 
 void out_cyan(char * string) {
-	printf("%s%s%s",ANSI_COLOR_CYAN, string, ANSI_COLOR_RESET);
+	fprintf(stderr, "%s%s%s",ANSI_COLOR_CYAN, string, ANSI_COLOR_RESET);
 }

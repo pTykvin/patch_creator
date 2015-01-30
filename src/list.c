@@ -6,8 +6,7 @@
 
 char * prepare_path(char **str) {
 	char * pch;
-	pch = strrchr(*str,'\t');
-	*str += pch-*str+1;
+	pch = *str;
 	if (pch = strstr(*str, "/src/"))
 		*pch = '\0';
 	return pch; 

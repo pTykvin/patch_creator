@@ -1,16 +1,10 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include "colorcon.h"
 
 int do_cmd(char * command) 
 {
-
-    FILE* file = popen(command, "r");
-	char buffer[256];
-    while (fgets(buffer, 256, file))
-		printf("%s", buffer);
-    pclose(file);
+	system(command);
     return 0;
 }
 
@@ -31,21 +25,25 @@ void for_build(char * s, char * d) {
 	strcat(buffer, cmd);
    	do_cmd(buffer);
 
-   	out_cyan("\n[COPY]");   	
-   	out_blue("\n\tFROM ");
-   	out_white(s);
-   	out_blue("\n\tTO ");
-	out_white(d);
+   	fprintf(stderr, "\n[COPY]\n\t[FROM] %s\n\t[TO] %s\n", s, d);
 }
 
 int main(int argc, char *argv[]) {
 
 	char from[512], to[512], buffer[1024];
 	while(fgets(buffer, 1024, stdin)) {
+		if (strstr(buffer, "[DEL]")) {
+			char * b;
+			b = strstr(buffer, "SCO/") + 4;
+			strcpy(from, b);
+			char * c;
+			c = strstr(from,"..") - 1;
+			*c = '\0';
+			printf("%s", from);
+			continue;
+		}
 		sscanf(buffer, "%[^:]:%s", from, to);
 		for_build(from, to);
-	}
-	out_white("\n");
-	out_green("\n============================================================================\n                                BUILD READY\n============================================================================\n");
+	}	
 	return 0;
 }

@@ -5,6 +5,10 @@
 #include "list.h"
 #include "colorcon.h"
 
+enum {
+	MODULE, LIBRARY, UNKNOWN, PLUGIN, EJB, SERVER_LIB, UPDATER
+};
+
 array * load(FILE * input) {
 	array * parent = NULL;
 	array * next = NULL;
@@ -124,6 +128,54 @@ int jar_name(FILE * file, array * project) {
 	return 1;
 }
 
+int check_type(FILE * file) {
+	out_white("\tcheck type...");
+	char buffer[256];
+	char * type = NULL;
+	int into_packaging = 0;
+	FILE * f = file;
+	while (fgets(buffer, 256, f)) {				
+		if (strstr(buffer, "packaging"))
+			into_packaging = 1;	
+		if (into_packaging) {
+			if (strstr(buffer, "}")) 
+				into_packaging = 0;				
+			if (strstr(buffer, "type")) {
+				type = trim(get_value(strdup(buffer)));
+				break;
+			}
+		}
+	}
+	if (type == NULL) {
+		out_green("\t\t\tOK: unknown\n");
+		return UNKNOWN;
+	} else if (strstr(type, "module")) {
+		out_green("\t\t\tOK: module\n");			
+		return MODULE;
+	} else if (strstr(type, "plugin")) {
+		out_green("\t\t\tOK: plugin\n");			
+		return PLUGIN;
+	} else if (strstr(type, "ejb")) {
+		out_yellow("\t\t\tSKIP: ejb\n");			
+		return EJB;
+	} else if (strstr(type, "updater")) {
+		out_green("\t\t\tOK: updater\n");			
+		return UPDATER;
+	} else if (strstr(type, "serverLib")) {
+		out_yellow("\t\t\tSKIP: server lib\n");			
+		return SERVER_LIB;
+	} else if (strstr(type, "library")) {
+		out_yellow("\t\t\tOK: library\n");			
+		return LIBRARY;
+	} else {
+		out_red("\t\t\tFAIL: DON'T CORRECT TYPE: ");
+		out_red(type);
+		out_red("\n");
+		return -1;
+	}
+}
+
+
 int check_branch(FILE * file) {
 	out_white("\tcheck branch...");
 	char buffer[256];
@@ -194,17 +246,26 @@ int create_build_path(array * project, char * deploy) {
 	out_white("build.gradle...");
 	if(file = fopen(gradle_file, "r")) {
 		out_green("\t\tOK.\n");
-		if (project->need_to_build)
-			project->need_to_build = check_branch(file);
 		rewind(file);
-		if (project->need_to_build)
-			project->need_to_build = deploy_path(file, project);
+		int type = check_type(file);
 		rewind(file);
-		if (project->need_to_build)
-			project->need_to_build = jar_name(file, project);
-		if (project->need_to_build)
-			project->need_to_build = is_build_exists(project, deploy);		
-
+		if (type == MODULE || type == PLUGIN || type == UNKNOWN || type == UPDATER) {
+			if (project->need_to_build)
+				project->need_to_build = check_branch(file);
+			rewind(file);
+			if (project->need_to_build)
+				project->need_to_build = deploy_path(file, project);
+			rewind(file);
+			if (project->need_to_build)
+				project->need_to_build = jar_name(file, project);
+			if (project->need_to_build)
+				project->need_to_build = is_build_exists(project, deploy);		
+		} else if (type == LIBRARY) {
+			out_green("PREPARE LIB");
+		} else if (type == EJB || type == SERVER_LIB){
+		} else {
+			out_red("!!!!!!!!!!! ALARM !!!!!!!!!!!!!!");
+		}
 		fclose(file);
 	} else {
 		out_red("\t\tFAIL: NOT FOUND\n");

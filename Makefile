@@ -42,4 +42,4 @@ copier: opt/copier.o opt/colorcon.o
 	gcc opt/copier.o opt/colorcon.o -o copier
 libs_differ: opt/libs_differ.o
 	gcc opt/libs_differ.o -o libs_differ	
-install: dir_tree differencer analizer checkouter copier
+install: dir_tree differencer analizer checkouter copier libs_differ

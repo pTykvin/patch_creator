@@ -16,6 +16,8 @@ opt/copier.o: src/copier.c src/colorcon.h
 	gcc -c src/copier.c -o opt/copier.o 
 opt/checkouter.o: src/checkouter.c src/colorcon.h
 	gcc -c src/checkouter.c -o opt/checkouter.o 
+opt/libs_differ.o: src/libs_differ.c
+	gcc -c src/libs_differ.c -o opt/libs_differ.o 	
 opt/main.o: src/main.c src/command.h src/colorcon.h src/list.h src/global.h
 	gcc -c src/main.c -o opt/main.o 
 
@@ -38,4 +40,6 @@ checkouter: opt/checkouter.o opt/colorcon.o
 	gcc opt/checkouter.o opt/colorcon.o -o checkouter
 copier: opt/copier.o opt/colorcon.o
 	gcc opt/copier.o opt/colorcon.o -o copier
+libs_differ: opt/libs_differ.o
+	gcc opt/libs_differ.o -o libs_differ	
 install: dir_tree differencer analizer checkouter copier

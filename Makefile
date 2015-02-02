@@ -14,6 +14,8 @@ opt/analizer.o: src/analizer.c src/colorcon.h src/list.h
 	gcc -c src/analizer.c -o opt/analizer.o 
 opt/copier.o: src/copier.c src/colorcon.h
 	gcc -c src/copier.c -o opt/copier.o 
+opt/checkouter.o: src/checkouter.c src/colorcon.h
+	gcc -c src/checkouter.c -o opt/checkouter.o 
 opt/main.o: src/main.c src/command.h src/colorcon.h src/list.h src/global.h
 	gcc -c src/main.c -o opt/main.o 
 
@@ -22,6 +24,7 @@ dir_tree:
 	mkdir -p opt
 	mkdir -p tmp
 	mkdir -p build
+	mkdir -p art
 
 list: opt/list.o opt/colorcon.o
 	gcc opt/list.o opt/colorcon.o -o bin/list
@@ -31,5 +34,8 @@ differencer: opt/differencer.o opt/colorcon.o opt/list.o
 	gcc opt/differencer.o opt/colorcon.o opt/list.o -o differencer
 analizer: opt/analizer.o opt/colorcon.o opt/list.o 
 	gcc opt/analizer.o opt/colorcon.o opt/list.o -o analizer
+checkouter: opt/checkouter.o opt/colorcon.o
+	gcc opt/checkouter.o opt/colorcon.o -o checkouter
 copier: opt/copier.o opt/colorcon.o
 	gcc opt/copier.o opt/colorcon.o -o copier
+install: dir_tree differencer analizer checkouter copier

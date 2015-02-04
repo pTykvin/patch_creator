@@ -5,10 +5,6 @@
 #include "list.h"
 #include "colorcon.h"
 
-enum {
-	MODULE, LIBRARY, UNKNOWN, PLUGIN, EJB, SERVER_LIB, UPDATER
-};
-
 array * load(FILE * input) {
 	array * parent = NULL;
 	array * next = NULL;
@@ -70,39 +66,6 @@ char * jar_name_by_path(char * path) {
 	return result;
 }
 
-int deploy_path(FILE * file, array * project) {
-	out_white("\tdeploy_path...");		
-	char buffer[256];
-	char * path = NULL;
-	int into_packaging = 0;
-	FILE * f = file;
-	while (fgets(buffer, 256, f)) {		
-		if (strstr(buffer, "packaging"))
-			into_packaging = 1;		
-		if (into_packaging) {
-			if (strstr(buffer, "}")) 
-				into_packaging = 0;	
-			if (strstr(buffer, "deployPath")) {				
-				path = get_value(strdup(buffer));
-				break;
-			}
-		}
-	}	
-	if (path == NULL) {
-		out_red("\t\tFAIL: CAN'T FIND DEPLOY PATH.\n");	
-		return 0;
-	} else if (strstr("...skipJar", path)) {
-		out_yellow("\t\t\tSKIP_JAR: DON'T NEED TO BUILD.\n");	
-		return 0;
-	} else {
-		project->deploy_path = path;
-		out_green("\t\t\tOK: ");
-		out_green(path);
-		out_green("\n");
-	}
-	return 1;
-}
-
 int jar_name(FILE * file, array * project) {
 	out_white("\tjar file name...");	
 	char buffer[256];
@@ -147,26 +110,29 @@ int check_type(FILE * file) {
 		}
 	}
 	if (type == NULL) {
-		out_green("\t\t\tOK: unknown\n");
-		return UNKNOWN;
+		out_green("\t\tOK: unknown\n");
+		return 1;
 	} else if (strstr(type, "module")) {
-		out_green("\t\t\tOK: module\n");			
-		return MODULE;
+		out_green("\t\tOK: module\n");			
+		return 1;
 	} else if (strstr(type, "plugin")) {
-		out_green("\t\t\tOK: plugin\n");			
-		return PLUGIN;
-	} else if (strstr(type, "ejb")) {
-		out_yellow("\t\t\tSKIP: ejb\n");			
-		return EJB;
+		out_green("\t\tOK: plugin\n");			
+		return 1;
+	} else if (strstr(type, "common")) {
+		out_green("\t\tOK: common\n");			
+		return 1;
+	}  else if (strstr(type, "ejb")) {
+		out_yellow("\t\tSKIP: ejb\n");			
+		return 0;
 	} else if (strstr(type, "updater")) {
-		out_green("\t\t\tOK: updater\n");			
-		return UPDATER;
-	} else if (strstr(type, "serverLib")) {
-		out_yellow("\t\t\tSKIP: server lib\n");			
-		return SERVER_LIB;
+		out_green("\t\tOK: updater\n");			
+		return 1;
 	} else if (strstr(type, "library")) {
-		out_yellow("\t\t\tOK: library\n");			
-		return LIBRARY;
+		out_green("\t\tOK: library\n");			
+		return 1;
+	} else if (strstr(type, "serverLib")) {
+		out_yellow("\t\tSKIP: server lib\n");			
+		return 0;
 	} else {
 		out_red("\t\t\tFAIL: DON'T CORRECT TYPE: ");
 		out_red(type);
@@ -175,6 +141,40 @@ int check_type(FILE * file) {
 	}
 }
 
+int check_deploy(FILE * file) {
+	out_white("\tcheck deploy...");
+	char buffer[256];
+	char * deploy = NULL;
+	int into_packaging = 0;
+	FILE * f = file;
+	while (fgets(buffer, 256, f)) {			
+		if (strstr(buffer, "packaging"))
+			into_packaging = 1;		
+		if (into_packaging) {
+			if (strstr(buffer, "}")) 
+				into_packaging = 0;	
+			if (strstr(buffer, "deployPath")) {
+				deploy = trim(get_value(strdup(buffer)));
+				break;
+			}
+		}
+	}
+
+	if (deploy == NULL || !strstr(deploy, "...skipJar")) {
+		out_green("\t\tOK: ");	
+		if (deploy) 
+			out_green(deploy);
+		else 
+			out_green("NULL");
+		out_green("\n");			
+		return 1;
+	} else {
+		out_yellow("\t\tSKIP: ");
+		out_yellow(deploy);
+		out_yellow("\n");
+		return 0;
+	}
+}
 
 int check_branch(FILE * file) {
 	out_white("\tcheck branch...");
@@ -216,24 +216,44 @@ void deleteEnter(char ** str) {
 		*(*str + strlen(*str) - 1) = '\0';	
 }
 
-int is_build_exists (array * project, char * deploy) {
-	out_white("\tJar file exists...");
-	char * result = malloc(strlen(deploy)+strlen("/")+strlen(project->deploy_path)+strlen("/")+strlen(project->jar_path)+1);
-	strcpy(result, deploy);
-	strcat(result, "/");
-	strcat(result, project->deploy_path);
-	strcat(result, "/");
-	strcat(result, project->jar_path);
-	if (access(result, F_OK) == -1) {
-		out_red("\tNO.\n");
-		return 0;	
-	} else {
-		out_green("\tYES.\n");
-		return 1;	
+int configure_deployPath(char * deploy, array * project) {
+	out_white("\tconfigure_deployPath...");	
+	char command[512];		
+	strcpy(command, "find ");
+	strcat(command, deploy);
+	strcat(command, " -name ");
+	strcat(command, project->jar_path);
+	int count = 0;
+	FILE * cmd = popen(command, "r");
+	if (cmd) {
+		while (fgets(command, 256, cmd))
+			count++;
+		if (count == 1) {		
+			project->deploy_path = command + strlen(deploy) + 1;
+			char * ch;
+			ch = project->deploy_path + strlen(project->deploy_path) - 1;
+			*ch = '\0';
+			out_green("\tOK: ");
+			out_green(project->deploy_path);
+			out_green("\n");	
+			return 1;		
+		} else {
+			out_red("\tFAIL: ");
+			if (count == 0) 
+				out_red("FILE NOT FOUND\n");
+			else
+				out_red("TO MANY FILES FOUND\n");
+			return 0;
+		}
+		out_white("\n");
 	}
+	out_red("FAIL: CAN'T EXECUTE ");
+	out_red(command);
+	out_red("\n");
+	return 0;
 }
 
-int create_build_path(array * project, char * deploy) {
+int create_build_path(array * project, char * deploy, char * patch) {
 	deleteEnter(&project->project_path);
 	out_white("\n");
 	out_white(project->project_path);
@@ -246,26 +266,37 @@ int create_build_path(array * project, char * deploy) {
 	out_white("build.gradle...");
 	if(file = fopen(gradle_file, "r")) {
 		out_green("\t\tOK.\n");
+
 		rewind(file);
-		int type = check_type(file);
+		if (project->need_to_build)
+			project->need_to_build = check_deploy(file);
 		rewind(file);
-		if (type == MODULE || type == PLUGIN || type == UNKNOWN || type == UPDATER) {
-			if (project->need_to_build)
-				project->need_to_build = check_branch(file);
-			rewind(file);
-			if (project->need_to_build)
-				project->need_to_build = deploy_path(file, project);
-			rewind(file);
-			if (project->need_to_build)
-				project->need_to_build = jar_name(file, project);
-			if (project->need_to_build)
-				project->need_to_build = is_build_exists(project, deploy);		
-		} else if (type == LIBRARY) {
-			out_green("PREPARE LIB");
-		} else if (type == EJB || type == SERVER_LIB){
-		} else {
-			out_red("!!!!!!!!!!! ALARM !!!!!!!!!!!!!!");
+		if (project->need_to_build)
+			project->need_to_build = check_type(file);
+		rewind(file);
+		if (project->need_to_build)
+			project->need_to_build = check_branch(file);
+		rewind(file);
+		if (project->need_to_build)
+			project->need_to_build = jar_name(file, project);			
+
+		if (project->need_to_build)
+			project->need_to_build  = configure_deployPath(deploy, project);
+
+		if (project->need_to_build) {
+			char from[1024], to[1024];
+
+			strcpy(from, deploy);
+			strcat(from, "/");
+			strcat(from, project->deploy_path);
+
+			strcpy(to, patch);
+			strcat(to, "/");
+			strcat(to, project->deploy_path);			
+
+			printf("%s:%s\n", from, to);
 		}
+		
 		fclose(file);
 	} else {
 		out_red("\t\tFAIL: NOT FOUND\n");
@@ -275,35 +306,10 @@ int create_build_path(array * project, char * deploy) {
 	return 1;
 }
 
-int prepare_build (array * start, char * deploy) {
+void prepare_build (array * start, char * deploy, char * patch) {
 	array * next = start;
 	while (next != NULL) {
-		create_build_path(next, deploy);
-		next = next->next;
-	}
-}
-
-char * get_path(array * project, char  * deploy, int need_name) {
-	int len_name = (need_name) ? strlen(project->jar_path) : 0;
-	char * d = malloc(strlen(deploy)+strlen("/")+strlen(project->deploy_path)+strlen("/")+len_name+1);
-	strcpy(d, deploy);
-	strcat(d, "/");
-	strcat(d, project->deploy_path);
-	strcat(d, "/");
-	if (need_name)
-		strcat(d, project->jar_path);
-	return d;	
-}
-
-int copy_from_to(array * start, char  * deploy, char  * patch) {
-
-	array * next = start;
-	while (next != NULL) {
-		if (next->need_to_build) {
-			char * d = get_path(next, deploy, 1);
-			char * p = get_path(next, patch, 0);
-			printf("%s:%s\n", d, p);
-		}
+		create_build_path(next, deploy, patch);		
 		next = next->next;
 	}
 }
@@ -337,8 +343,7 @@ int main(int argc, char *argv[])
 			out_red("Укажите обязательный ключ -d <patch_path>\n");
 			return 9;
 		}		
-		prepare_build(arr, deploy);
-		copy_from_to(arr, deploy, patch);
+		prepare_build(arr, deploy, patch);
 		out_blue("[ANALIZER FINISH]\n"); 
 	return 0;
 }

@@ -4,7 +4,7 @@
 #include "colorcon.h"
 
 void checkout(char * checkout) {
-	char cmd[50];
+	char cmd[255];
 	strcpy(cmd, "git fetch");
 	system(cmd);
 	strcpy(cmd, "git checkout ");

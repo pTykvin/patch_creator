@@ -9,6 +9,9 @@ void checkout(char * checkout) {
 	system(cmd);
 	strcpy(cmd, "git checkout ");
 	strcat(cmd, checkout);
+	out_yellow("EXECUTE ");
+	out_yellow(cmd);
+	out_yellow("\n");
 	system(cmd);
 }
 
